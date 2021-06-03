@@ -1,4 +1,5 @@
 BTCB = 0x6ce8da28e2f864420840cf74474eff5fd80e65b8
 WBNB = 0x094616f0bdfb0b526bd735bf66eca0ad254ca81f
 DAI_testnet = 0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867
-BTC_testnet = 0x4bdba6b8d6a7eb2838bfc0e1f98b604a5a5f9cfe
+CAKE = 0x8ed39e59daf86cd1b598ac5cc363da896660b35d
+BNB = 0x62fd47f61433dc9cbe2e219312ad6178eb92debd
