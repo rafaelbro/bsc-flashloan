@@ -25,8 +25,17 @@
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
 
+// GET A NEW VANITY-ETH: https://vanity-eth.tk/
+// VANITY-ETH ADDRESS: 0x9f1A2456e19565260dDe8b70837189aE63E2409a
+// VANITY-ETH ANDRESS PRIV KEY: 961706d001210e16f60bcccb14c390f93deb97d3f89e37b58f50b3a7c16aa64a
+
+// GET BNB FOR THE CREATED ADDRESS: https://testnet.binance.org/faucet-smart
+// VALIDATE THE RECEIVED BNB IN THE TESTNET: https://testnet.bscscan.com/address/<ADDRESS_GENERATED>
+const provider = new HDWalletProvider({
+  privateKeys: ['961706d001210e16f60bcccb14c390f93deb97d3f89e37b58f50b3a7c16aa64a'],
+  providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545'
+});
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -51,11 +60,12 @@ module.exports = {
       network_id: "5777",       // Any network (default: none)
     },
     testnet: {
-      provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s1.binance.org:8545`),
+      provider: () => provider,
       network_id: 97,
       confirmations: 10,
       timeoutBlocks: 200,
-      skipDryRun: true
+      skipDryRun: true,
+      gas: 20000000
     },
     // Another network with more advanced options...
     // advanced: {
