@@ -29,7 +29,8 @@ Environment Requirements:
 1. Go to the truffle console by typing `truffle console --network testnet`
 2. Instanciate the deployed contract by typing `let instance = await Arbitrage.deployed()` at the console.
 3. Get the account address add to the truffle-config setup by calling `let accounts = await web3.eth.getAccounts()`. It will be the first address of the array, so you can get it by calling `accounts[0]`
-4. Call the desired function or call with the necessary arguments. Remember that transactions spend some amount of gas, where calls does not use gas to get information from the network
+4. Call the desired function or call with the necessary arguments. Remember that transactions spend some amount of gas, where calls does not use gas to get information from the network. I.E.
+`instance.startArbitrage('0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867', '0x4bdba6b8d6a7eb2838bfc0e1f98b604a5a5f9cfe', 0, 1)`. It will execute the arbitrage between DAI and BTC. Special point to the fact that 0 DAI is provided, so it will start automatically the FlashLoan.
 
 
 
