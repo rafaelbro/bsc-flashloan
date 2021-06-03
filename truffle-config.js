@@ -25,7 +25,6 @@
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 // GET A NEW VANITY-ETH: https://vanity-eth.tk/
 // VANITY-ETH ADDRESS: 0x9f1A2456e19565260dDe8b70837189aE63E2409a
@@ -66,7 +65,7 @@ module.exports = {
       confirmations: 10,
       timeoutBlocks: 200,
       skipDryRun: true,
-      gas: 1000000
+      gas: 20000000
     },
     // Another network with more advanced options...
     // advanced: {
