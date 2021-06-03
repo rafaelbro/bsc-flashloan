@@ -20,6 +20,20 @@ Environment Requirements:
 });
 ```
 
+## Deploying the contract
+1. Go to the root folder of the project, and enter `truffle compile`
+2. Then, to deploy it, type `truffle migrate --reset --network testnet`. It will use the amount of BNB at the provided address and the address will be the owner of the contract.
+3. Wait until it deploy it and then get the contract address after it successfully deploy it. Save it for later use.
+
+## Interaction with the contract
+1. Go to the truffle console by typing `truffle console --network testnet`
+2. Instanciate the deployed contract by typing `let instance = await Arbitrage.deployed()` at the console.
+3. Get the account address add to the truffle-config setup by calling `let accounts = await web3.eth.getAccounts()`. It will be the first address of the array, so you can get it by calling `accounts[0]`
+4. Call the desired function or call with the necessary arguments. Remember that transactions spend some amount of gas, where calls does not use gas to get information from the network
+
+
+
+## Alternative II
 ### Create a file .secret with the mnemonic phrase to walle
 Use truffle and build project 
 truffle build
