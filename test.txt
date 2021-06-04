@@ -1,0 +1,33 @@
+0	amountIn	uint256	200000000000000                         #0.0002DAI
+1	amountOutMin	uint256	28335922624184                      #0.000028477602237305 WBNB
+2	path	address[]	8a9424745056eb399fd19a0ec26a14316684e274
+ae13d989dac2f0debff460ac112a837c89baa7cd
+3	to	address	2601119789408d42f2bef80a59ddaf204ffa335d
+4	deadline	uint256	1622784162
+
+
+amountIn (uint256)
+200000000000000
+amountOutMin (uint256)
+1603518717481168
+path (address[])
+[0xae13d989dac2f0debff460ac112a837c89baa7cd , 0x8a9424745056eb399fd19a0ec26a14316684e274]
+to (address)
+0x2601119789408D42f2Bef80A59DDaF204fFa335D
+deadline (uint256)
+2622782703
+ 
+
+
+
+pancakeswap
+
+0.5 WBNB = 4.009 ====>  1 WBNB : 8 DAI
+                        1DAI : 0.125 BNB
+BAKERYSWAP
+
+1WBNB = 6.2 DAI 
+
+100DAI = 13
+
+

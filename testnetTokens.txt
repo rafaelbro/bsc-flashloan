@@ -2,3 +2,24 @@ BTCB = 0x6ce8da28e2f864420840cf74474eff5fd80e65b8
 WBNB = 0x094616f0bdfb0b526bd735bf66eca0ad254ca81f
 DAI_testnet = 0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867
 BTC_testnet = 0x4bdba6b8d6a7eb2838bfc0e1f98b604a5a5f9cfe
+
+
+WBNB2 = 0xae13d989dac2f0debff460ac112a837c89baa7cd
+DAI_PANCAKE_BAKERY = 0x8a9424745056eb399fd19a0ec26a14316684e274
+
+pancake_test_factory = 0xb7926c0430afb07aa7defde6da862ae0bde767bc
+
+500000000000000000 -- 0.5
+
+received =    AE4C99935B1AA0e76900e86cD155BFA63aB77A2a
+calculated =  9b9fd221cb378173cc8ad018aa4758c18ab15fbf
+
+truffle console --network testnet
+
+let token = await Arbitrage.at('0xd43130e7C29D109BE344Ecd3e68943BB05F28332')
+
+
+#arb with 0.0002DAI = 200000000000000
+#arb with 0.0001WBNB = 100000000000000
+token.startArbitrage('0xae13d989dac2f0debff460ac112a837c89baa7cd', '0x8a9424745056eb399fd19a0ec26a14316684e274', 0, 200000000000000)
+
