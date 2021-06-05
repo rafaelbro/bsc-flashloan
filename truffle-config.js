@@ -32,8 +32,10 @@ const fs = require('fs');
 
 // GET BNB FOR THE CREATED ADDRESS: https://testnet.binance.org/faucet-smart
 // VALIDATE THE RECEIVED BNB IN THE TESTNET: https://testnet.bscscan.com/address/<ADDRESS_GENERATED>
+
+//b9e1e1bc3b4b48643cde5baaf02bedf055fbcd69da5b337d8e039ee75a35dff5 - > HEck
 const provider = new HDWalletProvider({
-  privateKeys: ['961706d001210e16f60bcccb14c390f93deb97d3f89e37b58f50b3a7c16aa64a'],
+  privateKeys: ['b9e1e1bc3b4b48643cde5baaf02bedf055fbcd69da5b337d8e039ee75a35dff5'],
   providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545'
 });
 module.exports = {
@@ -62,10 +64,10 @@ module.exports = {
     testnet: {
       provider: () => provider,
       network_id: 97,
-      confirmations: 10,
+      confirmations: 3,
       timeoutBlocks: 200,
       skipDryRun: true,
-      gas: 20000000
+      //gas: 20000000,
     },
     // Another network with more advanced options...
     // advanced: {
