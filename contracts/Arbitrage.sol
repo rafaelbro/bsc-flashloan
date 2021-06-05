@@ -85,12 +85,11 @@ contract Arbitrage {
         uint256 _amount1,
         bytes calldata _data
     ) external {
-        address[] memory path = new address[](2);
+        uint256 initialTokenAmount = _amount0 == 0 ? _amount1 : _amount0; //gets borrowed token
 
-        uint256 amountToken = _amount0 == 0 ? _amount1 : _amount0; //gets borrowed token
-
-        address token0 = IUniswapV2Pair(msg.sender).token0();
-        address token1 = IUniswapV2Pair(msg.sender).token1();
+        /*
+        address token0 = IUniswapV2Pair(msg.sender).token0(); //WBNB
+        address token1 = IUniswapV2Pair(msg.sender).token1(); //DAI*/
 
         /*
         address calc = UniswapV2Library.pairFor(pancakeFactory, token0, token1); wrong calculations
@@ -103,38 +102,70 @@ contract Arbitrage {
 
         require(_amount0 == 0 || _amount1 == 0, "Zeroed amounts");
 
-        path[0] = _amount0 == 0 ? token1 : token0;
-        path[1] = _amount0 == 0 ? token0 : token1;
+        //IERC20 token = IERC20(_amount0 == 0 ? token1 : token0);
 
-        IERC20 token = IERC20(_amount0 == 0 ? token1 : token0);
+        uint256 lastTokenPathIndex = setTokenPath.length - 1;
 
-        //get amount required to trade
-        uint256 amountRequired =
+        address[] memory endPathToken = new address[](2);
+        endPathToken[0] = setTokenPath[0];
+        endPathToken[1] = setTokenPath[lastTokenPathIndex];
+
+        require(
+            (IERC20(endPathToken[0]).balanceOf(myAddress)) != 0,
+            "borrowed wrong asset"
+        );
+
+        //calculates amount required to payback loan that will need to be generated
+        uint256 endAmountRequired =
             UniswapV2Library.getAmountsIn(
                 pancakeFactory,
-                amountToken,
-                path,
+                IERC20(setTokenPath[0]).balanceOf(myAddress),
+                endPathToken, //path from 1st to last token
                 pairAdress
             )[0];
 
-        //IERC20 otherToken = IERC20(_amount0 == 0 ? token0 : token1);
+        for (uint256 i; i < setTokenPath.length - 1; i++) {
+            address[] memory intermediaryPathToken = new address[](2);
+            intermediaryPathToken[0] = setTokenPath[i];
+            intermediaryPathToken[1] = setTokenPath[i + 1];
+            IERC20 token = IERC20(intermediaryPathToken[0]);
+            uint256 balance = token.balanceOf(myAddress);
 
-        token.approve(address(IUniswapV2Router02(routerMap[0])), amountToken);
+            IUniswapV2Router02 currentRouter = IUniswapV2Router02(routerMap[i]);
+            token.approve(address(currentRouter), balance);
 
-        uint256 amountReceived =
-            IUniswapV2Router02(routerMap[0]).swapExactTokensForTokens(
-                amountToken,
-                amountRequired,
-                path,
+            currentRouter.swapExactTokensForTokens(
+                balance,
+                0,
+                intermediaryPathToken,
                 myAddress,
                 now + 1000
-            )[1];
+            );
+        }
+        IERC20 finalToken = IERC20(setTokenPath[lastTokenPathIndex]);
+        uint256 finalBalance = finalToken.balanceOf(myAddress);
 
-        TransferHelper.safeTransfer(path[1], msg.sender, amountRequired);
+        require(
+            finalBalance > endAmountRequired,
+            string(
+                abi.encodePacked(
+                    "Trade preju! req:",
+                    Utils.uint2str(endAmountRequired),
+                    " final: ",
+                    Utils.uint2str(finalBalance)
+                )
+            )
+        );
+
         TransferHelper.safeTransfer(
-            path[1],
+            setTokenPath[lastTokenPathIndex],
+            msg.sender,
+            endAmountRequired
+        );
+        TransferHelper.safeTransfer(
+            setTokenPath[lastTokenPathIndex],
             tx.origin,
-            SafeMath.sub(amountReceived, amountRequired)
+            SafeMath.sub(finalBalance, endAmountRequired)
         );
     }
 
@@ -143,7 +174,7 @@ contract Arbitrage {
         address token1,
         uint256 amount
     ) internal pure returns (uint256 a, uint256 b) {
-        if (token0 < token1) return (0, amount);
+        if (token0 > token1) return (0, amount);
         return (amount, 0);
     }
 

@@ -22,12 +22,11 @@ deadline (uint256)
 
 pancakeswap
 
-0.5 WBNB = 4.009 ====>  1 WBNB : 8 DAI
+0.5 WBNB = 4.009 ====>  1 WBNB : 8.2 DAI
                         1DAI : 0.125 BNB
 BAKERYSWAP
 
-1WBNB = 6.2 DAI 
-
-100DAI = 13
+1WBNB = 15 DAI 
+1DAI =~ 0.07WBNB
 
 
