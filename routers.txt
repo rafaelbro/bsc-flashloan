@@ -1,1 +1,4 @@
-Elipse - 0xc6a752948627bECaB5474a10821Df73fF4771a49
+Exchange - Router - Similarity with Cake (x to xxx)
+Elipse - 0xc6a752948627bECaB5474a10821Df73fF4771a49 - x
+Apeswap - 0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607 - xxx
+Waultswap - 0xD48745E39BbED146eEC15b79cBF964884F9877c2 = xx
