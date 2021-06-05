@@ -1,4 +1,8 @@
 Exchange - Router - Similarity with Cake (x to xxx)
 Elipse - 0xc6a752948627bECaB5474a10821Df73fF4771a49 - x
 Apeswap - 0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607 - xxx
-Waultswap - 0xD48745E39BbED146eEC15b79cBF964884F9877c2 = xx
+Waultswap - 0xD48745E39BbED146eEC15b79cBF964884F9877c2 - xx
+Nerve finance - 0x1B3771a66ee31180906972580adE9b81AFc5fCDc - x 
+Belt finance - 0xAEA4f7dcd172997947809CE6F12018a6D5c1E8b6 - x
+BSCEX - 0x8F34C8232d482Cb65Fea0d05184596001997D352 - x
+Kebab - 0x05ff2b0db69458a0750badebc4f9e13add608c7f - xxx (cake router)
