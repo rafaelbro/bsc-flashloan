@@ -20,13 +20,6 @@ Environment Requirements:
 });
 ```
 
-```
-  const provider = new HDWalletProvider({
-    privateKeys: ['961706d001210e16f60bcccb14c390f93deb97d3f89e37b58f50b3a7c16aa64a'],
-    providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545'
-});
-```
-
 ## Deploying the contract
 1. Go to the root folder of the project, and enter `truffle compile`
 2. Then, to deploy it, type `truffle migrate --reset --network testnet`. It will use the amount of BNB at the provided address and the address will be the owner of the contract.
