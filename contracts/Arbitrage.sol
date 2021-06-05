@@ -1,34 +1,81 @@
 pragma solidity ^0.6.6;
 
-import "./UniswapV2Library.sol";
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IUniswapV2Factory.sol";
 import "./interfaces/IERC20.sol";
+import "./library/TransferHelper.sol";
+import "./library/UniswapV2Library.sol";
+import "./library/Utils.sol";
 
 contract Arbitrage {
     address public pancakeFactory;
-    uint256 deadline = now + 1 days;
-    IUniswapV2Router02 public bakeryRouter;
+    address private owner;
+    address myAddress = address(this); // contract address
+    mapping(uint256 => address) routerMap; //mapping ints to routers
 
-    constructor(address _pancakeFactory, address _bakeryRouter) public {
+    uint256[] setRouterPath; //var to declare router path
+    address[] setTokenPath; //var to declare token addresses path
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    constructor(address _pancakeFactory, address[] memory routers) public {
         pancakeFactory = _pancakeFactory;
-        bakeryRouter = IUniswapV2Router02(_bakeryRouter);
+        owner == msg.sender;
+        require(routers.length > 0, "No routers declared");
+        for (uint256 i = 0; i < routers.length; i++) {
+            routerMap[i] = routers[i];
+        }
+    }
+
+    function setPath(uint256[] memory routingPath, address[] memory tokenPath)
+        internal
+    {
+        delete setRouterPath;
+        delete setTokenPath;
+        require(
+            routingPath.length == tokenPath.length - 1,
+            "Token path needs to be ( routing path + 1) "
+        );
+
+        for (uint256 i; i < routingPath.length; i++) {
+            setRouterPath.push(routingPath[i]);
+            setTokenPath.push(tokenPath[i]);
+        }
+
+        setTokenPath.push(tokenPath[routingPath.length]);
+        require(1 == 0, "resetou path");
     }
 
     function startArbitrage(
-        address token0,
-        address token1,
-        uint256 amount0,
-        uint256 amount1
-    ) external {
+        uint256 amountBorrowed, //amount of tokens of token[0]
+        uint256[] calldata routerPath,
+        address[] calldata tokenPath
+    ) external onlyOwner {
+        require(tokenPath.length > 1, "Wrong token path size");
+
         address pairAddress =
-            IUniswapV2Factory(pancakeFactory).getPair(token0, token1);
+            IUniswapV2Factory(pancakeFactory).getPair(
+                tokenPath[0],
+                tokenPath[tokenPath.length - 1]
+            );
         require(pairAddress != address(0), "This pool does not exist");
+
+        (uint256 token0, uint256 token1) =
+            defineTokenOrderBasedOnPair(
+                tokenPath[0],
+                tokenPath[tokenPath.length - 1],
+                amountBorrowed
+            );
+
+        setPath(routerPath, tokenPath);
         //Flashloan borrows asset with non 0 amount
         IUniswapV2Pair(pairAddress).swap(
-            amount0,
-            amount1,
+            token0,
+            token1,
             address(this),
             bytes("not empty")
         );
@@ -47,22 +94,23 @@ contract Arbitrage {
         address token0 = IUniswapV2Pair(msg.sender).token0();
         address token1 = IUniswapV2Pair(msg.sender).token1();
 
-        //address calc = UniswapV2Library.pairFor(pancakeFactory, token0, token1); wrong calculations
+        require(1 == 0, "chegou no swap");
 
-        address pairAdress = msg.sender;
         /*
+        address calc = UniswapV2Library.pairFor(pancakeFactory, token0, token1); wrong calculations
         require(
             msg.sender == calc,
             append("Unauthorized par: ", msg.sender, calc)
         );*/
+
+        address pairAdress = msg.sender;
+
         require(_amount0 == 0 || _amount1 == 0, "Zeroed amounts");
 
         path[0] = _amount0 == 0 ? token1 : token0;
         path[1] = _amount0 == 0 ? token0 : token1;
 
         IERC20 token = IERC20(_amount0 == 0 ? token1 : token0);
-
-        token.approve(address(bakeryRouter), amountToken);
 
         //get amount required to trade
         uint256 amountRequired =
@@ -72,112 +120,50 @@ contract Arbitrage {
                 path,
                 pairAdress
             )[0];
-        /*
+
+        //IERC20 otherToken = IERC20(_amount0 == 0 ? token0 : token1);
         require(
             1 == 0,
             string(
-                abi.encodePacked(
-                    " params, amountToken: ", //borrowed
-                    uint2str(amountToken),
-                    " params, amountReq: ",
-                    uint2str(amountRequired), //required from 2nd token to repay borrow
-                    " path0: ",
-                    addressToString(path[0]),
-                    " path1: ",
-                    addressToString(path[1])
+                abi.encode(
+                    "n aprovou, bakeryAdd: ",
+                    Utils.addressToString(routerMap[0])
                 )
             )
-        );*/
-        IERC20 otherToken = IERC20(_amount0 == 0 ? token0 : token1);
-
-        uint256[] memory amountReceived = new uint256[](2);
-        amountReceived = bakeryRouter.swapExactTokensForTokens(
-            amountToken,
-            amountRequired,
-            path,
-            msg.sender,
-            deadline
         );
 
-        /*
-        require(
-            1 == 0,
-            string(
-                abi.encodePacked(
-                    " amt1: ",
-                    uint2str(amountReceived[0]),
-                    " amt2: ",
-                    uint2str(amountReceived[1]),
-                    //" received: ",
-                    //uint2str(amountReceived),
-                    " req:",
-                    uint2str(amountRequired)
-                    //" mine: ",
-                    //uint2str(SafeMath.sub(amountReceived, amountRequired))
-                )
-            )
-        );*/
+        token.approve(address(IUniswapV2Router02(routerMap[0])), amountToken);
 
-        //returns second part of pool back
-        otherToken.transfer(msg.sender, amountRequired);
-        otherToken.transfer(
+        uint256 amountReceived =
+            IUniswapV2Router02(routerMap[0]).swapExactTokensForTokens(
+                amountToken,
+                amountRequired,
+                path,
+                myAddress,
+                now + 1000
+            )[1];
+
+        TransferHelper.safeTransfer(path[1], msg.sender, amountRequired);
+        TransferHelper.safeTransfer(
+            path[1],
             tx.origin,
-            SafeMath.sub(amountReceived[1] - 1, amountRequired)
+            SafeMath.sub(amountReceived, amountRequired)
         );
     }
 
-    // Utility Functions
-    function addressToString(address x) internal view returns (string memory) {
-        bytes memory s = new bytes(40);
-        for (uint256 i = 0; i < 20; i++) {
-            bytes1 b = bytes1(uint8(uint256(uint160(x)) / (2**(8 * (19 - i)))));
-            bytes1 hi = bytes1(uint8(b) / 16);
-            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-            s[2 * i] = char(hi);
-            s[2 * i + 1] = char(lo);
-        }
-        return string(s);
+    function defineTokenOrderBasedOnPair(
+        address token0,
+        address token1,
+        uint256 amount
+    ) internal returns (uint256 a, uint256 b) {
+        if (token0 < token1) return (0, amount);
+        return (amount, 0);
     }
 
-    function char(bytes1 b) internal view returns (bytes1 c) {
-        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
-        else return bytes1(uint8(b) + 0x57);
-    }
-
-    function uint2str(uint256 _i)
-        internal
-        pure
-        returns (string memory _uintAsString)
+    function addRouter(uint256 index, address routerAddress)
+        external
+        onlyOwner
     {
-        if (_i == 0) {
-            return "0";
-        }
-        uint256 j = _i;
-        uint256 len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        uint256 k = len;
-        while (_i != 0) {
-            k = k - 1;
-            uint8 temp = (48 + uint8(_i - (_i / 10) * 10));
-            bytes1 b1 = bytes1(temp);
-            bstr[k] = b1;
-            _i /= 10;
-        }
-        return string(bstr);
-    }
-
-    function append(
-        string memory a,
-        address b,
-        address c
-    ) internal view returns (string memory) {
-        return
-            string(
-                abi.encodePacked(a, addressToString(b), " ", addressToString(c))
-            );
+        routerMap[index] = routerAddress;
     }
 }
