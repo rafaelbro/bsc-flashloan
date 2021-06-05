@@ -12,10 +12,10 @@ contract Arbitrage {
     address public pancakeFactory;
     address private owner;
     address myAddress = address(this); // contract address
-    mapping(uint256 => address) routerMap; //mapping ints to routers
+    mapping(uint256 => address) private routerMap; //mapping ints to routers
 
-    uint256[] setRouterPath; //var to declare router path
-    address[] setTokenPath; //var to declare token addresses path
+    uint256[] private setRouterPath; //var to declare router path
+    address[] private setTokenPath; //var to declare token addresses path
 
     modifier onlyOwner {
         require(msg.sender == owner);
@@ -47,20 +47,18 @@ contract Arbitrage {
         }
 
         setTokenPath.push(tokenPath[routingPath.length]);
-        require(1 == 0, "resetou path");
     }
 
     function startArbitrage(
         uint256 amountBorrowed, //amount of tokens of token[0]
         uint256[] calldata routerPath,
         address[] calldata tokenPath
-    ) external onlyOwner {
-        require(tokenPath.length > 1, "Wrong token path size");
-
+    ) external {
+        //require(tokenPath.length > 1, "Wrong token path size");
         address pairAddress =
             IUniswapV2Factory(pancakeFactory).getPair(
                 tokenPath[0],
-                tokenPath[tokenPath.length - 1]
+                tokenPath[SafeMath.sub(tokenPath.length, 1)]
             );
         require(pairAddress != address(0), "This pool does not exist");
 
@@ -94,8 +92,6 @@ contract Arbitrage {
         address token0 = IUniswapV2Pair(msg.sender).token0();
         address token1 = IUniswapV2Pair(msg.sender).token1();
 
-        require(1 == 0, "chegou no swap");
-
         /*
         address calc = UniswapV2Library.pairFor(pancakeFactory, token0, token1); wrong calculations
         require(
@@ -122,15 +118,6 @@ contract Arbitrage {
             )[0];
 
         //IERC20 otherToken = IERC20(_amount0 == 0 ? token0 : token1);
-        require(
-            1 == 0,
-            string(
-                abi.encode(
-                    "n aprovou, bakeryAdd: ",
-                    Utils.addressToString(routerMap[0])
-                )
-            )
-        );
 
         token.approve(address(IUniswapV2Router02(routerMap[0])), amountToken);
 
@@ -155,7 +142,7 @@ contract Arbitrage {
         address token0,
         address token1,
         uint256 amount
-    ) internal returns (uint256 a, uint256 b) {
+    ) internal pure returns (uint256 a, uint256 b) {
         if (token0 < token1) return (0, amount);
         return (amount, 0);
     }
