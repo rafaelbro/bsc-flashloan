@@ -13,6 +13,7 @@ Index         Exchange        Address                                         is
 4             MDEX            0x7DAe51BD3E3376B8c7c4900E9107f12Be3AF1bA8      ok
 
 5             ACRYPTOS        0x191409D5A4EfFe25b0f4240557BA2192D18a191e      ok(adapted)
+6             ELLIPSIS        0xc6a752948627bECaB5474a10821Df73fF4771a49      ok(adapted)
 
 
 
@@ -38,9 +39,10 @@ i = in j= out dx = input min_dy = min_out
 
 ELLIPSIS FINANCE => 0x160CAed03795365F3A589f10C379FfA7d75d4E76 //0x2D0A931Dd088ea108a73901f83065DCA81ca474C
 (BUSD-USDC-USDT) => exchange(int128 i, int128 j, uint256 dx, uint256 min_dy)
-0=BUSD
-1=USDC
-2=USDT
+0=DAI
+1=BUSD
+2=USDC
+3=USDT
 
 
 

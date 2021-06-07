@@ -16,7 +16,7 @@ calculated =  9b9fd221cb378173cc8ad018aa4758c18ab15fbf
 
 truffle console --network testnet
 
-let token = await Arbitrage.at('0xf47bE46C425C7436D686df726e05605C8a63F22e')
+let token = await Arbitrage.at('0xe99Bd0e3113bA5FF325924920FbdF97f6ae72FE5')
 
 
 #arb with 0.0002DAI = 200000000000000
