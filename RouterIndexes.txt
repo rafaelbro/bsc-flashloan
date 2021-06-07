@@ -6,11 +6,14 @@ Index         Name            Address
 
 ## MAINNET
 Index         Exchange        Address                                         isOk
-              PANCAKESWAP     0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F      ok
-              APESWAP         0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607      ok
-              WAULTSWAP       0xD48745E39BbED146eEC15b79cBF964884F9877c2      ok
-              BAKERYSWAP      0xCDe540d7eAFE93aC5fE6233Bee57E1270D3E330F      ok
-              MDEX            0x7DAe51BD3E3376B8c7c4900E9107f12Be3AF1bA8      ok
+0             PANCAKESWAP     0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F      ok
+1             APESWAP         0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607      ok
+2             WAULTSWAP       0xD48745E39BbED146eEC15b79cBF964884F9877c2      ok
+3             BAKERYSWAP      0xCDe540d7eAFE93aC5fE6233Bee57E1270D3E330F      ok
+4             MDEX            0x7DAe51BD3E3376B8c7c4900E9107f12Be3AF1bA8      ok
+
+5             ACRYPTOS        0x191409D5A4EfFe25b0f4240557BA2192D18a191e      ok(adapted)
+
 
 
 nextToAdd(StableSwaps)
@@ -33,7 +36,7 @@ i = in j= out dx = input min_dy = min_out
   2= DAI
   3= USDC
 
-ELLIPSIS FINANCE => 0x160CAed03795365F3A589f10C379FfA7d75d4E76 
+ELLIPSIS FINANCE => 0x160CAed03795365F3A589f10C379FfA7d75d4E76 //0x2D0A931Dd088ea108a73901f83065DCA81ca474C
 (BUSD-USDC-USDT) => exchange(int128 i, int128 j, uint256 dx, uint256 min_dy)
 0=BUSD
 1=USDC

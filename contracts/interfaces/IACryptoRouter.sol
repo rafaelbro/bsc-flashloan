@@ -1,6 +1,6 @@
 pragma solidity >=0.5.0;
 
-interface IACrypto {
+interface IACryptoRouter {
     function exchange_underlying(
         int128 i,
         int128 j,
