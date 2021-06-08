@@ -2,6 +2,21 @@ const Arbitrage = artifacts.require("Arbitrage.sol");
 
 
 module.exports = function (deployer) {
+
+  /*deployer.deploy(
+    Arbitrage,
+    '0xBCfCcbde45cE874adCB698cC183deBcF17952812', //PancakeSwap factory    
+    ['0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F',
+      '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+      '0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607',
+      '0xD48745E39BbED146eEC15b79cBF964884F9877c2',
+      '0xCDe540d7eAFE93aC5fE6233Bee57E1270D3E330F',
+      '0x7DAe51BD3E3376B8c7c4900E9107f12Be3AF1bA8',
+      '0x191409D5A4EfFe25b0f4240557BA2192D18a191e',
+      '0xc6a752948627bECaB5474a10821Df73fF4771a49']
+  );*/
+
+
   deployer.deploy(
     Arbitrage,
     '0xb7926c0430afb07aa7defde6da862ae0bde767bc', //PancakeSwap factory    

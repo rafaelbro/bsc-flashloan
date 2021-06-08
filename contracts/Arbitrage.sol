@@ -8,12 +8,12 @@ import "./interfaces/IACryptoRouter.sol";
 import "./interfaces/IEllipsisRouter.sol";
 
 import "./library/TransferHelper.sol";
-import "./library/UniswapV2Library.sol";
+import "./library/PancakeLibrary.sol";
 import "./library/Utils.sol";
 
 contract Arbitrage {
     address public pancakeFactory;
-    address private owner;
+    address owner;
     address myAddress = address(this); // contract address
     mapping(uint256 => address) private routerMap; //mapping ints to routers
     mapping(address => int128) public ACryptosStableMap;
@@ -25,13 +25,13 @@ contract Arbitrage {
     address[] private setTokenPath; //var to declare token addresses path
 
     modifier onlyOwner {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Not contract owner");
         _;
     }
 
     constructor(address _pancakeFactory, address[] memory routers) public {
         pancakeFactory = _pancakeFactory;
-        owner == msg.sender;
+        owner = msg.sender;
         require(routers.length > 0, "No routers declared");
         for (uint256 i = 0; i < routers.length; i++) {
             routerMap[i] = routers[i];
@@ -61,7 +61,7 @@ contract Arbitrage {
         uint256 amountBorrowed, //amount of tokens of token[0]
         uint256[] calldata routerPath,
         address[] calldata tokenPath
-    ) external {
+    ) external onlyOwner {
         //require(tokenPath.length > 1, "Wrong token path size");
         address pairAddress =
             IUniswapV2Factory(pancakeFactory).getPair(
@@ -101,13 +101,6 @@ contract Arbitrage {
         address token0 = IUniswapV2Pair(msg.sender).token0(); //WBNB
         address token1 = IUniswapV2Pair(msg.sender).token1(); //DAI*/
 
-        /*
-        address calc = UniswapV2Library.pairFor(pancakeFactory, token0, token1); wrong calculations
-        require(
-            msg.sender == calc,
-            append("Unauthorized par: ", msg.sender, calc)
-        );*/
-
         address pairAddress = msg.sender;
 
         //IERC20 token = IERC20(_amount0 == 0 ? token1 : token0);
@@ -118,6 +111,17 @@ contract Arbitrage {
         endPathToken[0] = setTokenPath[0];
         endPathToken[1] = setTokenPath[lastTokenPathIndex];
 
+        address calc =
+            PancakeLibrary.pairFor(
+                pancakeFactory,
+                endPathToken[0],
+                endPathToken[1]
+            );
+        require(
+            msg.sender == calc,
+            Utils.append("Unauthorized par: ", msg.sender, calc)
+        );
+
         require(
             (IERC20(endPathToken[0]).balanceOf(myAddress)) != 0,
             "borrowed wrong asset"
@@ -125,11 +129,10 @@ contract Arbitrage {
 
         //calculates amount required to payback loan that will need to be generated
         uint256 endAmountRequired =
-            UniswapV2Library.getAmountsIn(
+            PancakeLibrary.getAmountsIn(
                 pancakeFactory,
                 IERC20(setTokenPath[0]).balanceOf(myAddress),
-                endPathToken, //path from 1st to last token
-                pairAddress
+                endPathToken //path from 1st to last token
             )[0];
 
         for (uint256 i = 0; i < setTokenPath.length - 1; i++) {
@@ -172,8 +175,6 @@ contract Arbitrage {
         IERC20 finalToken = IERC20(setTokenPath[lastTokenPathIndex]);
         uint256 finalBalance = finalToken.balanceOf(myAddress);
 
-        uint256 borrowBalance = IERC20(setTokenPath[0]).balanceOf(myAddress);
-
         require(
             finalBalance > endAmountRequired,
             string(
@@ -185,20 +186,6 @@ contract Arbitrage {
                 )
             )
         );
-        /*
-        require(
-            1 == 0,
-            string(
-                abi.encodePacked(
-                    "add1:",
-                    Utils.addressToString(setTokenPath[lastTokenPathIndex]),
-                    " traded: ",
-                    Utils.uint2str(finalBalance),
-                    " req: ",
-                    Utils.uint2str(endAmountRequired)
-                )
-            )
-        );*/
 
         TransferHelper.safeTransfer(
             setTokenPath[lastTokenPathIndex],
@@ -232,9 +219,9 @@ contract Arbitrage {
         internal
         returns (SwapCategory swapCategory)
     {
-        if (routerIndex >= 0 || routerIndex <= 4) return SwapCategory.UNISWAP;
-        if (routerIndex == 5) return SwapCategory.ACRYPTOS;
-        if (routerIndex == 6) return SwapCategory.ELLIPSIS;
+        if (routerIndex >= 0 || routerIndex <= 5) return SwapCategory.UNISWAP;
+        if (routerIndex == 6) return SwapCategory.ACRYPTOS;
+        if (routerIndex == 7) return SwapCategory.ELLIPSIS;
         require(1 == 0, "Invalid router index");
     }
 
@@ -300,4 +287,48 @@ contract Arbitrage {
         EllipsisStableMap[addressUSDC] = 2;
         EllipsisStableMap[addressUSDT] = 3;
     }
+
+    function getRouterIn(uint256 index)
+        public
+        view
+        returns (address routerAddress)
+    {
+        return routerMap[index];
+    }
+
+    function renounceOwnership(address newOwner) external onlyOwner {
+        owner = newOwner;
+    }
 }
+
+/*
+        function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock {
+        require(amount0Out > 0 || amount1Out > 0, 'Pancake: INSUFFICIENT_OUTPUT_AMOUNT');
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Pancake: INSUFFICIENT_LIQUIDITY');
+
+        uint balance0;
+        uint balance1;
+        { // scope for _token{0,1}, avoids stack too deep errors
+        address _token0 = token0;
+        address _token1 = token1;
+        require(to != _token0 && to != _token1, 'Pancake: INVALID_TO');
+        if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
+        if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
+        if (data.length > 0) IPancakeCallee(to).pancakeCall(msg.sender, amount0Out, amount1Out, data);
+        balance0 = IERC20(_token0).balanceOf(address(this));
+        balance1 = IERC20(_token1).balanceOf(address(this));
+        }
+        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
+        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
+        require(amount0In > 0 || amount1In > 0, 'Pancake: INSUFFICIENT_INPUT_AMOUNT');
+        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
+        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(2));
+        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(2));
+        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Pancake: K');
+        }
+
+        _update(balance0, balance1, _reserve0, _reserve1);
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+    }
+*/

@@ -38,6 +38,11 @@ const provider = new HDWalletProvider({
   privateKeys: ['b9e1e1bc3b4b48643cde5baaf02bedf055fbcd69da5b337d8e039ee75a35dff5'],
   providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545'
 });
+
+const providerMainNet = new HDWalletProvider({
+  privateKeys: [],
+  providerOrUrl: 'https://bsc-dataseed1.binance.org'
+})
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -69,6 +74,15 @@ module.exports = {
       skipDryRun: true,
       //gas: 20000000,
     },
+    mainnet: {
+      provider: () => providerMainNet,
+      network_id: 56,
+      confirmations: 3,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+      gasPrice: 5000000000,
+      //gas: 20000000,
+    }
     // Another network with more advanced options...
     // advanced: {
     // port: 8777,             // Custom port

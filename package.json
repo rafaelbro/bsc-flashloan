@@ -13,6 +13,7 @@
   "devDependencies": {},
   "scripts": {
     "deploy": "truffle migrate --reset --network testnet",
+    "deployMainNet": "truffle migrate --reset --network mainnet",
     "start": "truffle console --network testnet",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
