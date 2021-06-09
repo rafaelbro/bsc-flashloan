@@ -70,7 +70,7 @@ contract Arbitrage {
             );
         require(pairAddress != address(0), "This pool does not exist");
 
-        (uint256 token0, uint256 token1) =
+        (uint256 amountToken0, uint256 amountToken1) =
             defineTokenOrderBasedOnPair(
                 tokenPath[0],
                 tokenPath[tokenPath.length - 1],
@@ -80,8 +80,8 @@ contract Arbitrage {
         setPath(routerPath, tokenPath);
         //Flashloan borrows asset with non 0 amount
         IUniswapV2Pair(pairAddress).swap(
-            token0,
-            token1,
+            amountToken0,
+            amountToken1,
             address(this),
             bytes("not empty")
         );
@@ -97,13 +97,7 @@ contract Arbitrage {
 
         require(_amount0 == 0 || _amount1 == 0, "Zeroed amounts");
 
-        /*
-        address token0 = IUniswapV2Pair(msg.sender).token0(); //WBNB
-        address token1 = IUniswapV2Pair(msg.sender).token1(); //DAI*/
-
         address pairAddress = msg.sender;
-
-        //IERC20 token = IERC20(_amount0 == 0 ? token1 : token0);
 
         uint256 lastTokenPathIndex = setTokenPath.length - 1;
 
@@ -122,10 +116,8 @@ contract Arbitrage {
             Utils.append("Unauthorized par: ", msg.sender, calc)
         );
 
-        require(
-            (IERC20(endPathToken[0]).balanceOf(myAddress)) != 0,
-            "borrowed wrong asset"
-        );
+        uint256 amount0In = IERC20(endPathToken[0]).balanceOf(myAddress);
+        require(amount0In != 0, "borrowed wrong asset");
 
         //calculates amount required to payback loan that will need to be generated
         uint256 endAmountRequired =
@@ -262,6 +254,24 @@ contract Arbitrage {
         return (amount, 0);
     }
 
+    function defineTokenOrderAmountAndAddressBasedOnPair(
+        address token0,
+        address token1,
+        uint256 amount
+    )
+        internal
+        pure
+        returns (
+            uint256 a,
+            uint256 b,
+            address token00,
+            address token01
+        )
+    {
+        if (token0 > token1) return (0, amount, token1, token0);
+        return (amount, 0, token0, token1);
+    }
+
     function addRouter(uint256 index, address routerAddress)
         external
         onlyOwner
@@ -302,33 +312,22 @@ contract Arbitrage {
 }
 
 /*
-        function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external lock {
-        require(amount0Out > 0 || amount1Out > 0, 'Pancake: INSUFFICIENT_OUTPUT_AMOUNT');
-        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'Pancake: INSUFFICIENT_LIQUIDITY');
+        (
+            reserves.amount0,
+            reserves.amount1,
+            reserves.token0,
+            reserves.token1
+        ) = defineTokenOrderAmountAndAddressBasedOnPair(
+            setTokenPath[0],
+            setTokenPath[setTokenPath.length - 1],
+            amount0In
+        );
 
-        uint balance0;
-        uint balance1;
-        { // scope for _token{0,1}, avoids stack too deep errors
-        address _token0 = token0;
-        address _token1 = token1;
-        require(to != _token0 && to != _token1, 'Pancake: INVALID_TO');
-        if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
-        if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-        if (data.length > 0) IPancakeCallee(to).pancakeCall(msg.sender, amount0Out, amount1Out, data);
-        balance0 = IERC20(_token0).balanceOf(address(this));
-        balance1 = IERC20(_token1).balanceOf(address(this));
-        }
-        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
-        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
-        require(amount0In > 0 || amount1In > 0, 'Pancake: INSUFFICIENT_INPUT_AMOUNT');
-        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(2));
-        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(2));
-        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'Pancake: K');
-        }
-
-        _update(balance0, balance1, _reserve0, _reserve1);
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
-    }
-*/
+        uint256 valor =
+            PancakeLibrary.calculateSlippageFee(
+                reserves,
+                endAmountRequired,
+                pairAddress
+            );
+    */
+//PancakeLibrary.calculateSlippageFee()

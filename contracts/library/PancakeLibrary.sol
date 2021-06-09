@@ -1,6 +1,9 @@
 pragma solidity >=0.5.0;
 
 import "../interfaces/IUniswapV2Pair.sol";
+import "../interfaces/IERC20.sol";
+
+import "./Utils.sol";
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -34,8 +37,9 @@ library PancakeLibrary {
                         hex"ff",
                         factory,
                         keccak256(abi.encodePacked(token0, token1)),
-                        //hex"d0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66" // init code hash MAINNET
-                        hex"ecba335299a6693cb2ebc4782e74669b84290b6378ea3a3873c7231a8d7d1074"
+                        //hex"d0d4c4cd0848c93cb4fd1f498d7013ee6bfb25783ea21593d5834f5d250ece66" // init code hash MAINNET FACTORYv1
+                        //hex"00fb7f630766e6a796048ea87d01acd3068e8ff67d078148a3fa3f4a84f69bd5" // init code hash MAINNET FACTORYv2
+                        hex"ecba335299a6693cb2ebc4782e74669b84290b6378ea3a3873c7231a8d7d1074" // TESTNET
                     )
                 )
             )
@@ -45,11 +49,10 @@ library PancakeLibrary {
     // fetches and sorts the reserves for a pair
     function getReserves(
         address factory,
-        address tokenA,
-        address tokenB
+        address tokenA, //dai
+        address tokenB //wbnb
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        pairFor(factory, tokenA, tokenB);
         (uint256 reserve0, uint256 reserve1, ) =
             IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0
@@ -99,8 +102,8 @@ library PancakeLibrary {
             reserveIn > 0 && reserveOut > 0,
             "PancakeLibrary: INSUFFICIENT_LIQUIDITY"
         );
-        uint256 numerator = reserveIn.mul(amountOut).mul(1000);
-        uint256 denominator = reserveOut.sub(amountOut).mul(998);
+        uint256 numerator = reserveOut.mul(amountOut).mul(1000);
+        uint256 denominator = reserveIn.sub(amountOut).mul(998);
         amountIn = (numerator / denominator).add(1);
     }
 
@@ -136,3 +139,123 @@ library PancakeLibrary {
         }
     }
 }
+
+/*
+    function calculateSlippageFee(
+        Utils.AmountsAndAdd memory structura,
+        uint256 sentAmt,
+        address pairAddress
+    ) internal returns (uint256 value) {
+        address token0 = structura.token0;
+        address token1 = structura.token1;
+        uint256 amount0Out = structura.amount0;
+        uint256 amount1Out = structura.amount1;
+        uint256 _reserve0 = structura.reserve0;
+        uint256 _reserve1 = structura.reserve1;
+        // scope for _token{0,1}, avoids stack too deep errors
+        uint256 balance0 = IERC20(token0).balanceOf(pairAddress);
+        uint256 balance1 = IERC20(token1).balanceOf(pairAddress);
+        balance0 = balance0 + sentAmt;
+
+        uint256 amount0In =
+            balance0 > _reserve0 - amount0Out
+                ? balance0 - (_reserve0 - amount0Out)
+                : 0;
+        uint256 amount1In =
+            balance1 > _reserve1 - amount1Out
+                ? balance1 - (_reserve1 - amount1Out)
+                : 0;
+        // scope for reserve{0,1}Adjusted, avoids stack too deep errors
+        uint256 balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(2));
+        uint256 balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(2));
+
+        //amtIn = balance1 - _reserve1
+        /*
+        require(
+            1 == 0,
+            string(
+                abi.encodePacked(
+                    "",
+                    Utils.uint2str(amount0In),
+                    ":",
+                    Utils.uint2str(amount1In),
+                    ":",
+                    Utils.uint2str(balance0),
+                    ":",
+                    Utils.uint2str(balance1),
+                    ":",
+                    Utils.uint2str(_reserve0),
+                    ":",
+                    Utils.uint2str(_reserve1)
+                )
+            )
+        );*/
+
+/*
+        uint256 slipageFee =
+            balance0Adjusted.mul(balance1Adjusted) -
+                (_reserve0.mul(_reserve1).mul(1000**2));*/
+
+/*
+            require(
+                balance0Adjusted.mul(balance1Adjusted) >=
+                    uint256(_reserve0).mul(_reserve1).mul(1000**2),
+                "Pancake: K"
+            );*/
+/*
+function swap(
+    uint256 amount0Out,  0
+    uint256 amount1Out, 100000000000
+    uint112 _reserve0,
+    uint112 _reserve1
+) external lock {
+    (uint112 _reserve0, uint112 _reserve1, ) = getReserves(); // gas savings
+    require(
+        amount0Out < _reserve0 && amount1Out < _reserve1,
+        "Pancake: INSUFFICIENT_LIQUIDITY"
+    );
+
+    uint256 balance0;
+    uint256 balance1;
+    {
+        // scope for _token{0,1}, avoids stack too deep errors
+        address _token0 = token0;
+        address _token1 = token1;
+        require(to != _token0 && to != _token1, "Pancake: INVALID_TO");
+        if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
+        if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
+        if (data.length > 0)
+            IPancakeCallee(to).pancakeCall(
+                msg.sender,
+                amount0Out,
+                amount1Out,
+                data
+            );
+        balance0 = IERC20(_token0).balanceOf(address(this));
+        balance1 = IERC20(_token1).balanceOf(address(this));
+    }
+    uint256 amount0In =
+        balance0 > _reserve0 - amount0Out
+            ? balance0 - (_reserve0 - amount0Out)
+            : 0;
+    uint256 amount1In =
+        balance1 > _reserve1 - amount1Out
+            ? balance1 - (_reserve1 - amount1Out)
+            : 0;
+    require(
+        amount0In > 0 || amount1In > 0,
+        "Pancake: INSUFFICIENT_INPUT_AMOUNT"
+    );
+    // scope for reserve{0,1}Adjusted, avoids stack too deep errors
+    uint256 balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(2));
+    uint256 balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(2));
+    require(
+        balance0Adjusted.mul(balance1Adjusted) >=
+            uint256(_reserve0).mul(_reserve1).mul(1000**2),
+        "Pancake: K"
+    );
+
+    _update(balance0, balance1, _reserve0, _reserve1);
+    emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+}
+*/

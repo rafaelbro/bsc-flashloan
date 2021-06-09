@@ -5,7 +5,7 @@ module.exports = function (deployer) {
 
   /*deployer.deploy(
     Arbitrage,
-    '0xBCfCcbde45cE874adCB698cC183deBcF17952812', //PancakeSwap factory    
+    '0xca143ce32fe78f1f7019d7d551a6402fc5350c73'
     ['0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F',
       '0x10ED43C718714eb63d5aA57B78B54704E256024E',
       '0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607',
@@ -24,6 +24,8 @@ module.exports = function (deployer) {
   );
 
   //0x6725F303b657a9451d8BA641348b6761A6CC7a17 -> 2nd factory pancake
+  //'0xBCfCcbde45cE874adCB698cC183deBcF17952812', //PancakeSwap factory V1
+
 
 
 };

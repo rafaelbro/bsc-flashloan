@@ -16,7 +16,7 @@ calculated =  9b9fd221cb378173cc8ad018aa4758c18ab15fbf
 
 truffle console --network testnet
 
-let token = await Arbitrage.at('0x324462c7DDE9C5BfCF17690AEA0ED6ebbe5CF1F2')
+let token = await Arbitrage.at('0x5A569F4ad1573043EF7b9B4b39Bec77253a1D33a')
 
 
 #arb with 0.0002DAI = 200000000000000
@@ -24,7 +24,7 @@ let token = await Arbitrage.at('0x324462c7DDE9C5BfCF17690AEA0ED6ebbe5CF1F2')
 token.startArbitrage('0xae13d989dac2f0debff460ac112a837c89baa7cd', '0x8a9424745056eb399fd19a0ec26a14316684e274', 0, 200000000000000)
 
 token.startArbitrage(200000000000000, [0], ['0x8a9424745056eb399fd19a0ec26a14316684e274', '0xae13d989dac2f0debff460ac112a837c89baa7cd'])
-token.startArbitrage(1000000000, [0], ['0xae13d989dac2f0debff460ac112a837c89baa7cd', '0x8a9424745056eb399fd19a0ec26a14316684e274'])
+token.startArbitrage(100000000000000, [0], ['0x8a9424745056eb399fd19a0ec26a14316684e274', '0xae13d989dac2f0debff460ac112a837c89baa7cd'])
 
 
 

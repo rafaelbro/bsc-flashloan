@@ -40,7 +40,7 @@ const provider = new HDWalletProvider({
 });
 
 const providerMainNet = new HDWalletProvider({
-  privateKeys: [],
+  privateKeys: ['b9e1e1bc3b4b48643cde5baaf02bedf055fbcd69da5b337d8e039ee75a35dff5'],
   providerOrUrl: 'https://bsc-dataseed1.binance.org'
 })
 module.exports = {
