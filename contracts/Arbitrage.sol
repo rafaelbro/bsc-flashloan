@@ -4,8 +4,8 @@ import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IUniswapV2Factory.sol";
 import "./interfaces/IERC20.sol";
-import "./interfaces/IACryptoRouter.sol";
-import "./interfaces/IEllipsisRouter.sol";
+import "./interfaces/ICorePool.sol";
+import "./interfaces/IMetaPool.sol";
 
 import "./library/TransferHelper.sol";
 import "./library/PancakeLibrary.sol";
@@ -19,7 +19,13 @@ contract Arbitrage {
     mapping(address => int128) public ACryptosStableMap;
     mapping(address => int128) public EllipsisStableMap;
 
-    enum SwapCategory {UNISWAP, ACRYPTOS, ELLIPSIS}
+    enum SwapCategory {
+        UNISWAP,
+        ACRYPTOSCORE,
+        ACRYPTOSMETA,
+        ELLIPSISCORE,
+        ELLIPSISMETA
+    }
 
     uint256[] private setRouterPath; //var to declare router path
     address[] private setTokenPath; //var to declare token addresses path
@@ -93,39 +99,58 @@ contract Arbitrage {
         uint256 _amount1,
         bytes calldata _data
     ) external {
-        uint256 initialTokenAmount = _amount0 == 0 ? _amount1 : _amount0; //gets borrowed token
-
         require(_amount0 == 0 || _amount1 == 0, "Zeroed amounts");
-
-        address pairAddress = msg.sender;
-
         uint256 lastTokenPathIndex = setTokenPath.length - 1;
-
+        address pairAddress = msg.sender;
         address[] memory endPathToken = new address[](2);
-        endPathToken[0] = setTokenPath[0];
-        endPathToken[1] = setTokenPath[lastTokenPathIndex];
+        endPathToken[0] = setTokenPath[lastTokenPathIndex];
+        endPathToken[1] = setTokenPath[0];
 
-        address calc =
+        address calculatedPairAddress =
             PancakeLibrary.pairFor(
                 pancakeFactory,
                 endPathToken[0],
                 endPathToken[1]
             );
         require(
-            msg.sender == calc,
-            Utils.append("Unauthorized par: ", msg.sender, calc)
+            msg.sender == calculatedPairAddress,
+            Utils.append(
+                "Unauthorized par: ",
+                msg.sender,
+                calculatedPairAddress
+            )
         );
 
-        uint256 amount0In = IERC20(endPathToken[0]).balanceOf(myAddress);
+        uint256 amount0In = IERC20(setTokenPath[0]).balanceOf(myAddress);
         require(amount0In != 0, "borrowed wrong asset");
 
         //calculates amount required to payback loan that will need to be generated
+        //Given an output amount calculates the input amount of the token 0
         uint256 endAmountRequired =
             PancakeLibrary.getAmountsIn(
                 pancakeFactory,
-                IERC20(setTokenPath[0]).balanceOf(myAddress),
-                endPathToken //path from 1st to last token
+                IERC20(setTokenPath[0]).balanceOf(myAddress), //given output amt
+                endPathToken //path from input token to output token
             )[0];
+
+        uint256 valorContract =
+            IUniswapV2Router01(0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3)
+                .getAmountsIn(
+                IERC20(setTokenPath[0]).balanceOf(myAddress),
+                endPathToken
+            )[0];
+
+        require(
+            endAmountRequired == valorContract,
+            string(
+                abi.encodePacked(
+                    "calc: ",
+                    Utils.uint2str(endAmountRequired),
+                    " contract: ",
+                    valorContract
+                )
+            )
+        );
 
         for (uint256 i = 0; i < setTokenPath.length - 1; i++) {
             address[] memory intermediaryPathToken = new address[](2);
@@ -149,14 +174,26 @@ contract Arbitrage {
                     intermediaryPathToken,
                     myAddress
                 );
-            } else if (resolvedSwapCategory == SwapCategory.ACRYPTOS) {
-                executeStableACrypto(
+            } else if (resolvedSwapCategory == SwapCategory.ACRYPTOSCORE) {
+                executeCoreACrypto(
+                    balance,
+                    currentRouterAddress,
+                    intermediaryPathToken
+                );
+            } else if (resolvedSwapCategory == SwapCategory.ACRYPTOSMETA) {
+                executeMetaACrypto(
+                    balance,
+                    currentRouterAddress,
+                    intermediaryPathToken
+                );
+            } else if (resolvedSwapCategory == SwapCategory.ELLIPSISCORE) {
+                executeCoreEllipsis(
                     balance,
                     currentRouterAddress,
                     intermediaryPathToken
                 );
             } else {
-                executeStableEllipse(
+                executeMetaEllipsis(
                     balance,
                     currentRouterAddress,
                     intermediaryPathToken
@@ -189,6 +226,7 @@ contract Arbitrage {
             tx.origin,
             SafeMath.sub(finalBalance, endAmountRequired)
         );
+        require(1 == 0, "executou");
     }
 
     function standardSwap(
@@ -212,18 +250,34 @@ contract Arbitrage {
         returns (SwapCategory swapCategory)
     {
         if (routerIndex >= 0 || routerIndex <= 5) return SwapCategory.UNISWAP;
-        if (routerIndex == 6) return SwapCategory.ACRYPTOS;
-        if (routerIndex == 7) return SwapCategory.ELLIPSIS;
+        if (routerIndex == 6) return SwapCategory.ACRYPTOSCORE;
+        if (routerIndex == 7) return SwapCategory.ACRYPTOSMETA;
+        if (routerIndex == 8) return SwapCategory.ELLIPSISCORE;
+        if (routerIndex == 9) return SwapCategory.ELLIPSISMETA;
         require(1 == 0, "Invalid router index");
     }
 
-    function executeStableACrypto(
+    function executeCoreACrypto(
         uint256 amount,
         address routerAddress,
         address[] memory path
     ) internal {
-        IACryptoRouter aCryptoRouter = IACryptoRouter(routerAddress);
-        aCryptoRouter.exchange_underlying(
+        ICorePool aCryptoCoreRouter = ICorePool(routerAddress);
+        aCryptoCoreRouter.exchange(
+            ACryptosStableMap[path[0]] - 1, //adjusted asset index
+            ACryptosStableMap[path[1]] - 1, //adjusted asset index
+            amount,
+            0
+        );
+    }
+
+    function executeMetaACrypto(
+        uint256 amount,
+        address routerAddress,
+        address[] memory path
+    ) internal {
+        IMetaPool aCryptoMetaRouter = IMetaPool(routerAddress);
+        aCryptoMetaRouter.exchange_underlying(
             ACryptosStableMap[path[0]],
             ACryptosStableMap[path[1]],
             amount,
@@ -231,13 +285,27 @@ contract Arbitrage {
         );
     }
 
-    function executeStableEllipse(
+    function executeCoreEllipsis(
         uint256 amount,
         address routerAddress,
         address[] memory path
     ) internal {
-        IEllipsisRouter ellipsisRouter = IEllipsisRouter(routerAddress);
-        ellipsisRouter.exchange_underlying(
+        IMetaPool ellipsisCoreRouter = IMetaPool(routerAddress);
+        ellipsisCoreRouter.exchange_underlying(
+            EllipsisStableMap[path[0]] - 1, //adjusted asset index
+            EllipsisStableMap[path[1]] - 1, //adjusted asset index
+            amount,
+            0
+        );
+    }
+
+    function executeMetaEllipsis(
+        uint256 amount,
+        address routerAddress,
+        address[] memory path
+    ) internal {
+        IMetaPool ellipsisMetaRouter = IMetaPool(routerAddress);
+        ellipsisMetaRouter.exchange_underlying(
             EllipsisStableMap[path[0]],
             EllipsisStableMap[path[1]],
             amount,
@@ -287,15 +355,15 @@ contract Arbitrage {
         address addressUSDC = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d;
 
         ACryptosStableMap[addressVAI] = 0;
-        ACryptosStableMap[addressBUSD] = 1;
-        ACryptosStableMap[addressUSDT] = 2;
-        ACryptosStableMap[addressDAI] = 3;
-        ACryptosStableMap[addressUSDC] = 4;
+        ACryptosStableMap[addressBUSD] = 1; // -1 for core
+        ACryptosStableMap[addressUSDT] = 2; // -1 for core
+        ACryptosStableMap[addressDAI] = 3; // -1 for core
+        ACryptosStableMap[addressUSDC] = 4; //-1 for core
 
         EllipsisStableMap[addressDAI] = 0;
-        EllipsisStableMap[addressBUSD] = 1;
-        EllipsisStableMap[addressUSDC] = 2;
-        EllipsisStableMap[addressUSDT] = 3;
+        EllipsisStableMap[addressBUSD] = 1; //-1 for core
+        EllipsisStableMap[addressUSDC] = 2; //-1 for core
+        EllipsisStableMap[addressUSDT] = 3; //-1 for core
     }
 
     function getRouterIn(uint256 index)
@@ -310,24 +378,3 @@ contract Arbitrage {
         owner = newOwner;
     }
 }
-
-/*
-        (
-            reserves.amount0,
-            reserves.amount1,
-            reserves.token0,
-            reserves.token1
-        ) = defineTokenOrderAmountAndAddressBasedOnPair(
-            setTokenPath[0],
-            setTokenPath[setTokenPath.length - 1],
-            amount0In
-        );
-
-        uint256 valor =
-            PancakeLibrary.calculateSlippageFee(
-                reserves,
-                endAmountRequired,
-                pairAddress
-            );
-    */
-//PancakeLibrary.calculateSlippageFee()
