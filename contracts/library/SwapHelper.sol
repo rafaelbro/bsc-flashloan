@@ -3,6 +3,7 @@ pragma solidity ^0.6.6;
 import "./../interfaces/ICorePool.sol";
 import "./../interfaces/IMetaPool.sol";
 import "./../interfaces/IUniswapV2Router02.sol";
+import "./Utils.sol";
 
 library SwapHelper {
     address constant addressVAI = 0x4BD17003473389A42DAF6a0a729f6Fdb328BbBd7;
@@ -66,13 +67,17 @@ library SwapHelper {
         address[] memory path
     ) internal {
         IUniswapV2Router02 currentRouter = IUniswapV2Router02(routerAddress);
-        currentRouter.swapExactTokensForTokens(
-            amount,
-            0,
-            path,
-            address(this),
-            now
-        );
+        try
+            currentRouter.swapExactTokensForTokens(
+                amount,
+                0,
+                path,
+                address(this),
+                now
+            )
+        {} catch {
+            require(false, "Error Uniswap");
+        }
     }
 
     function executeCoreACrypto(
@@ -83,7 +88,10 @@ library SwapHelper {
         ICorePool aCryptoCoreRouter = ICorePool(routerAddress);
         (int128 index0, int128 index1) = mapACryptos(path[0], path[1], 0);
         try aCryptoCoreRouter.exchange(index0, index1, amount, 0) {} catch {
-            require(false, "Error ACryptoCore");
+            require(
+                false,
+                stableMessage("CPTcore", index0, index1, routerAddress, amount)
+            );
         }
     }
 
@@ -97,7 +105,10 @@ library SwapHelper {
         try
             aCryptoMetaRouter.exchange_underlying(index0, index1, amount, 0)
         {} catch {
-            require(false, "Error ACryptoMeta");
+            require(
+                false,
+                stableMessage("CPTMeta", index0, index1, routerAddress, amount)
+            );
         }
     }
 
@@ -109,7 +120,10 @@ library SwapHelper {
         ICorePool ellipsisCoreRouter = ICorePool(routerAddress);
         (int128 index0, int128 index1) = mapEllipsis(path[0], path[1], 0);
         try ellipsisCoreRouter.exchange(index0, index1, amount, 0) {} catch {
-            require(false, "Error EllipsisCore");
+            require(
+                false,
+                stableMessage("ELPCore", index0, index1, routerAddress, amount)
+            );
         }
     }
 
@@ -123,7 +137,10 @@ library SwapHelper {
         try
             ellipsisMetaRouter.exchange_underlying(index0, index1, amount, 0)
         {} catch {
-            require(false, "Error EllipsisMeta");
+            require(
+                false,
+                stableMessage("ELPMeta", index0, index1, routerAddress, amount)
+            );
         }
     }
 
@@ -184,5 +201,29 @@ library SwapHelper {
         if (routerIndex == 8) return SwapCategory.ELLIPSISCORE;
         if (routerIndex == 9) return SwapCategory.ELLIPSISMETA;
         require(1 == 0, "Invalid router index");
+    }
+
+    function stableMessage(
+        string memory message,
+        int128 index0,
+        int128 index1,
+        address routerAddress,
+        uint256 amt
+    ) internal returns (string memory messageOut) {
+        return (
+            string(
+                abi.encodePacked(
+                    message,
+                    ":",
+                    Utils.uint2str(uint256(index0)),
+                    ":",
+                    Utils.uint2str(uint256(index1)),
+                    ":",
+                    Utils.addressToString(routerAddress),
+                    ":",
+                    Utils.uint2str(amt)
+                )
+            )
+        );
     }
 }
