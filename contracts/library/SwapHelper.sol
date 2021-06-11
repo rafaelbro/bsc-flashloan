@@ -195,7 +195,7 @@ library SwapHelper {
         internal
         returns (SwapCategory swapCategory)
     {
-        if (routerIndex >= 0 || routerIndex <= 5) return SwapCategory.UNISWAP;
+        if (routerIndex <= 5) return SwapCategory.UNISWAP;
         if (routerIndex == 6) return SwapCategory.ACRYPTOSCORE;
         if (routerIndex == 7) return SwapCategory.ACRYPTOSMETA;
         if (routerIndex == 8) return SwapCategory.ELLIPSISCORE;

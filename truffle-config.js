@@ -43,6 +43,7 @@ const providerMainNet = new HDWalletProvider({
   privateKeys: ['b9e1e1bc3b4b48643cde5baaf02bedf055fbcd69da5b337d8e039ee75a35dff5'],
   providerOrUrl: 'https://bsc-dataseed1.binance.org'
 })
+const providerForFork = new HDWalletProvider("myth like bonus scare over problem client lizard pioneer submit female collect", "http://127.0.0.1:8545");
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -62,9 +63,10 @@ module.exports = {
     // options below to some value.
     //
     development: {
+      provider: () => providerForFork,
       host: "127.0.0.1",     // Localhost (default: none)
       port: 8545,            // Standard Ethereum port (default: none)
-      network_id: "5777",       // Any network (default: none)
+      network_id: "56",       // Any network (default: none)
     },
     testnet: {
       provider: () => provider,
