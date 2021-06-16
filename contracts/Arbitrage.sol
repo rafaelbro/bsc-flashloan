@@ -54,12 +54,12 @@ contract Arbitrage {
     }
 
     function startArbitrage(
-        address pairAddress,
+        address inPairAddress,
         uint256 amountBorrowed, //amount of tokens of token[0]
         uint256[] calldata routerPath,
         address[] calldata tokenPath
     ) external onlyOwner {
-        this.pairAddress = pairAddress;
+        pairAddress = inPairAddress;
 
         (uint256 amountToken0, uint256 amountToken1) =
             defineTokenOrderBasedOnPair(
@@ -92,11 +92,11 @@ contract Arbitrage {
         endPathToken[1] = setTokenPath[0];
 
         require(
-            msg.sender == this.pairAddress,
+            msg.sender == pairAddress,
             Utils.append(
                 "Pancake Unauthorized pair: ",
                 msg.sender,
-                this.pairAddress
+                pairAddress
             )
         );
 
@@ -107,7 +107,7 @@ contract Arbitrage {
         //Given an output amount calculates the input amount of the token 0
         uint256 endAmountRequired =
             PancakeLibrary.getAmountsIn(
-                this.pairAddress,
+                pairAddress,
                 IERC20(setTokenPath[0]).balanceOf(myAddress), //given output amt
                 endPathToken //path from input token to output token
             )[0];
@@ -153,7 +153,7 @@ contract Arbitrage {
 
         TransferHelper.safeTransfer(
             setTokenPath[lastTokenPathIndex],
-            this.pairAddress,
+            pairAddress,
             endAmountRequired
         );
         TransferHelper.safeTransfer(
@@ -176,11 +176,11 @@ contract Arbitrage {
         endPathToken[1] = setTokenPath[0];
 
         require(
-            msg.sender == this.pairAddress,
+            msg.sender == pairAddress,
             Utils.append(
                 "Wault unauthorized pair: ",
                 msg.sender,
-                this.pairAddress
+                pairAddress
             )
         );
 
@@ -191,7 +191,7 @@ contract Arbitrage {
         //Given an output amount calculates the input amount of the token 0
         uint256 endAmountRequired =
             WaultLibrary.getAmountsIn(
-                this.pairAddress,
+                pairAddress,
                 IERC20(setTokenPath[0]).balanceOf(myAddress), //given output amt
                 endPathToken //path from input token to output token
             )[0];
@@ -237,7 +237,7 @@ contract Arbitrage {
 
         TransferHelper.safeTransfer(
             setTokenPath[lastTokenPathIndex],
-            this.pairAddress,
+            pairAddress,
             endAmountRequired
         );
         TransferHelper.safeTransfer(
