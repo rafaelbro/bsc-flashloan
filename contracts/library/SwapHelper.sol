@@ -84,7 +84,6 @@ library SwapHelper {
         ICorePool aCryptoCoreRouter = ICorePool(routerAddress);
         (int128 index0, int128 index1) = mapACryptos(path[0], path[1], 0);
         aCryptoCoreRouter.exchange(index0, index1, amount, 0);
-        }
     }
 
     function executeMetaACrypto(
@@ -114,7 +113,7 @@ library SwapHelper {
     ) internal {
         IMetaPool ellipsisMetaRouter = IMetaPool(routerAddress);
         (int128 index0, int128 index1) = mapEllipsis(path[0], path[1], 1);
-            ellipsisMetaRouter.exchange_underlying(index0, index1, amount, 0);
+        ellipsisMetaRouter.exchange_underlying(index0, index1, amount, 0);
     }
 
     function mapEllipsis(
