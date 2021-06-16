@@ -9,13 +9,14 @@ import "./interfaces/IMetaPool.sol";
 
 import "./library/TransferHelper.sol";
 import "./library/PancakeLibrary.sol";
+import "./library/WaultLibrary.sol";
 import "./library/Utils.sol";
 import "./library/SwapHelper.sol";
 
 contract Arbitrage {
-    address public pancakeFactory;
     address owner;
     address myAddress = address(this); // contract address
+    address private pairAddress;
     mapping(uint256 => address) private routerMap; //mapping ints to routers
 
     uint256[] private setRouterPath; //var to declare router path
@@ -26,8 +27,7 @@ contract Arbitrage {
         _;
     }
 
-    constructor(address _pancakeFactory, address[] memory routers) public {
-        pancakeFactory = _pancakeFactory;
+    constructor(address[] memory routers) public {
         owner = msg.sender;
         require(routers.length > 0, "No routers declared");
         for (uint256 i = 0; i < routers.length; i++) {
@@ -54,17 +54,12 @@ contract Arbitrage {
     }
 
     function startArbitrage(
+        address pairAddress,
         uint256 amountBorrowed, //amount of tokens of token[0]
         uint256[] calldata routerPath,
         address[] calldata tokenPath
     ) external onlyOwner {
-        //require(tokenPath.length > 1, "Wrong token path size");
-        address pairAddress =
-            IUniswapV2Factory(pancakeFactory).getPair(
-                tokenPath[0],
-                tokenPath[tokenPath.length - 1]
-            );
-        require(pairAddress != address(0), "This pool does not exist");
+        this.pairAddress = pairAddress;
 
         (uint256 amountToken0, uint256 amountToken1) =
             defineTokenOrderBasedOnPair(
@@ -74,6 +69,7 @@ contract Arbitrage {
             );
 
         setPath(routerPath, tokenPath);
+
         //Flashloan borrows asset with non 0 amount
         IUniswapV2Pair(pairAddress).swap(
             amountToken0,
@@ -89,35 +85,29 @@ contract Arbitrage {
         uint256 _amount1,
         bytes calldata _data
     ) external {
-        require(_amount0 == 0 || _amount1 == 0, "Zeroed amounts");
+        require(_amount0 == 0 || _amount1 == 0, "Pancake Zeroed amounts");
         uint256 lastTokenPathIndex = setTokenPath.length - 1;
         address[] memory endPathToken = new address[](2);
         endPathToken[0] = setTokenPath[lastTokenPathIndex];
         endPathToken[1] = setTokenPath[0];
 
-        address calculatedPairAddress =
-            PancakeLibrary.pairFor(
-                pancakeFactory,
-                endPathToken[0],
-                endPathToken[1]
-            );
         require(
-            msg.sender == calculatedPairAddress,
+            msg.sender == this.pairAddress,
             Utils.append(
-                "Unauthorized pair: ",
+                "Pancake Unauthorized pair: ",
                 msg.sender,
-                calculatedPairAddress
+                this.pairAddress
             )
         );
 
         uint256 amount0In = IERC20(setTokenPath[0]).balanceOf(myAddress);
-        require(amount0In != 0, "borrowed wrong asset");
+        require(amount0In != 0, "Pancake borrowed wrong asset");
 
         //calculates amount required to payback loan that will need to be generated
         //Given an output amount calculates the input amount of the token 0
         uint256 endAmountRequired =
             PancakeLibrary.getAmountsIn(
-                pancakeFactory,
+                this.pairAddress,
                 IERC20(setTokenPath[0]).balanceOf(myAddress), //given output amt
                 endPathToken //path from input token to output token
             )[0];
@@ -153,7 +143,7 @@ contract Arbitrage {
             finalBalance > endAmountRequired,
             string(
                 abi.encodePacked(
-                    "Trade preju! req:",
+                    "Pancake Trade preju! req:",
                     Utils.uint2str(endAmountRequired),
                     " final: ",
                     Utils.uint2str(finalBalance)
@@ -163,7 +153,91 @@ contract Arbitrage {
 
         TransferHelper.safeTransfer(
             setTokenPath[lastTokenPathIndex],
-            calculatedPairAddress,
+            this.pairAddress,
+            endAmountRequired
+        );
+        TransferHelper.safeTransfer(
+            setTokenPath[lastTokenPathIndex],
+            tx.origin,
+            SafeMath.sub(finalBalance, endAmountRequired)
+        );
+    }
+
+    function waultSwapCall(
+        address _sender,
+        uint256 _amount0,
+        uint256 _amount1,
+        bytes calldata _data
+    ) external {
+        require(_amount0 == 0 || _amount1 == 0, "Wault Zeroed amounts");
+        uint256 lastTokenPathIndex = setTokenPath.length - 1;
+        address[] memory endPathToken = new address[](2);
+        endPathToken[0] = setTokenPath[lastTokenPathIndex];
+        endPathToken[1] = setTokenPath[0];
+
+        require(
+            msg.sender == this.pairAddress,
+            Utils.append(
+                "Wault unauthorized pair: ",
+                msg.sender,
+                this.pairAddress
+            )
+        );
+
+        uint256 amount0In = IERC20(setTokenPath[0]).balanceOf(myAddress);
+        require(amount0In != 0, "Wault borrowed wrong asset");
+
+        //calculates amount required to payback loan that will need to be generated
+        //Given an output amount calculates the input amount of the token 0
+        uint256 endAmountRequired =
+            WaultLibrary.getAmountsIn(
+                this.pairAddress,
+                IERC20(setTokenPath[0]).balanceOf(myAddress), //given output amt
+                endPathToken //path from input token to output token
+            )[0];
+
+        SwapHelper.SwapStruct memory swapStruct;
+
+        for (uint256 i = 0; i < setTokenPath.length - 1; i++) {
+            address[] memory intermediaryPathToken = new address[](2);
+            intermediaryPathToken[0] = setTokenPath[i];
+            intermediaryPathToken[1] = setTokenPath[i + 1];
+            IERC20 token = IERC20(intermediaryPathToken[0]);
+
+            uint256 currentRouterIndex = setRouterPath[i];
+            address currentRouterAddress = routerMap[currentRouterIndex];
+
+            uint256 balance = token.balanceOf(myAddress); //gets current balance
+            token.approve(currentRouterAddress, balance); //approves for spending
+
+            swapStruct.amount = balance;
+            swapStruct.path = intermediaryPathToken;
+            swapStruct.currentRouterAddress = currentRouterAddress;
+            swapStruct.swapCategory = SwapHelper.classifySwap(
+                currentRouterIndex
+            );
+
+            SwapHelper.executeSwap(swapStruct);
+        }
+        //gets final balance of last token
+        IERC20 finalToken = IERC20(setTokenPath[lastTokenPathIndex]);
+        uint256 finalBalance = finalToken.balanceOf(myAddress);
+
+        require(
+            finalBalance > endAmountRequired,
+            string(
+                abi.encodePacked(
+                    "Wault Trade preju! req:",
+                    Utils.uint2str(endAmountRequired),
+                    " final: ",
+                    Utils.uint2str(finalBalance)
+                )
+            )
+        );
+
+        TransferHelper.safeTransfer(
+            setTokenPath[lastTokenPathIndex],
+            this.pairAddress,
             endAmountRequired
         );
         TransferHelper.safeTransfer(
