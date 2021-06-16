@@ -67,17 +67,13 @@ library SwapHelper {
         address[] memory path
     ) internal {
         IUniswapV2Router02 currentRouter = IUniswapV2Router02(routerAddress);
-        try
-            currentRouter.swapExactTokensForTokens(
-                amount,
-                0,
-                path,
-                address(this),
-                now
-            )
-        {} catch {
-            require(false, "Error Uniswap");
-        }
+        currentRouter.swapExactTokensForTokens(
+            amount,
+            0,
+            path,
+            address(this),
+            now
+        );
     }
 
     function executeCoreACrypto(
@@ -87,11 +83,7 @@ library SwapHelper {
     ) internal {
         ICorePool aCryptoCoreRouter = ICorePool(routerAddress);
         (int128 index0, int128 index1) = mapACryptos(path[0], path[1], 0);
-        try aCryptoCoreRouter.exchange(index0, index1, amount, 0) {} catch {
-            require(
-                false,
-                stableMessage("CPTcore", index0, index1, routerAddress, amount)
-            );
+        aCryptoCoreRouter.exchange(index0, index1, amount, 0);
         }
     }
 
@@ -102,14 +94,7 @@ library SwapHelper {
     ) internal {
         IMetaPool aCryptoMetaRouter = IMetaPool(routerAddress);
         (int128 index0, int128 index1) = mapACryptos(path[0], path[1], 1);
-        try
-            aCryptoMetaRouter.exchange_underlying(index0, index1, amount, 0)
-        {} catch {
-            require(
-                false,
-                stableMessage("CPTMeta", index0, index1, routerAddress, amount)
-            );
-        }
+        aCryptoMetaRouter.exchange_underlying(index0, index1, amount, 0);
     }
 
     function executeCoreEllipsis(
@@ -119,12 +104,7 @@ library SwapHelper {
     ) internal {
         ICorePool ellipsisCoreRouter = ICorePool(routerAddress);
         (int128 index0, int128 index1) = mapEllipsis(path[0], path[1], 0);
-        try ellipsisCoreRouter.exchange(index0, index1, amount, 0) {} catch {
-            require(
-                false,
-                stableMessage("ELPCore", index0, index1, routerAddress, amount)
-            );
-        }
+        ellipsisCoreRouter.exchange(index0, index1, amount, 0);
     }
 
     function executeMetaEllipsis(
@@ -134,14 +114,7 @@ library SwapHelper {
     ) internal {
         IMetaPool ellipsisMetaRouter = IMetaPool(routerAddress);
         (int128 index0, int128 index1) = mapEllipsis(path[0], path[1], 1);
-        try
-            ellipsisMetaRouter.exchange_underlying(index0, index1, amount, 0)
-        {} catch {
-            require(
-                false,
-                stableMessage("ELPMeta", index0, index1, routerAddress, amount)
-            );
-        }
+            ellipsisMetaRouter.exchange_underlying(index0, index1, amount, 0);
     }
 
     function mapEllipsis(
