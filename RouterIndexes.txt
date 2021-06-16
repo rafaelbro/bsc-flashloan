@@ -1,0 +1,58 @@
+## TESTNET
+Index         Name            Address
+0             BAKERYSWAP      0xCDe540d7eAFE93aC5fE6233Bee57E1270D3E330F
+
+
+
+## MAINNET
+Index         Exchange        Address                                         isOk
+0             PANCAKESWAP     0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F      ok
+1             PANCAKESWAP_V2  0x10ED43C718714eb63d5aA57B78B54704E256024E      ok
+2             APESWAP         0xC0788A3aD43d79aa53B09c2EaCc313A787d1d607      ok
+3             WAULTSWAP       0xD48745E39BbED146eEC15b79cBF964884F9877c2      ok
+4             BAKERYSWAP      0xCDe540d7eAFE93aC5fE6233Bee57E1270D3E330F      ok
+5             MDEX            0x7DAe51BD3E3376B8c7c4900E9107f12Be3AF1bA8      ok
+6             ACRYPTOSCORE    0xb3F0C9ea1F05e312093Fdb031E789A756659B0AC      corePool(BUSD/USDT/DAI/USDC) LOWER FEES => CALLS EXCHANGE
+7             ACRYPTOSMETA    0x191409D5A4EfFe25b0f4240557BA2192D18a191e      metaPool(VAI + corePool) => CALLS EXCHANGE_UNDERLYING
+8             ELLIPSISCORE    0x160CAed03795365F3A589f10C379FfA7d75d4E76      corePool(BUSD/USDC/USDT) => CALLS EXCHANGE
+9             ELLIPSISMETA    0xc6a752948627bECaB5474a10821Df73fF4771a49      metaPool(DAI + corePool) => CALLS EXCHANGE_UNDERLYING
+
+
+10300947945596054444114
+
+
+PANCAKESWAP FACTORY ADDRESS:  0xBCfCcbde45cE874adCB698cC183deBcF17952812
+
+
+
+nextToAdd(StableSwaps)
+ACRYPTOS and ELLIPSIS => Interface IStableSwap ## Need to call exchange in ellipsis and exchange_underlying method in ACRYPTOS
+
+NEED TO STUDY
+DODOv2        0x8F8Dd7DB1bDA5eD3da8C9daf3bfa471c12d58486
+WARDEN
+
+1inchRouter => 0x11111112542D85B3EF69AE05771c2dCCff4fAa26
+
+
+
+ACRYPTOS  => 0x191409D5A4EfFe25b0f4240557BA2192D18a191e 
+(VAI-BUSD-USDT-DAI-USDC) => exchange_underlying(int128 i, int128 j, uint256 dx, uint256 min_dy)
+i = in j= out dx = input min_dy = min_out
+0= VAI
+  0= BUSD
+  1= USDT
+  2= DAI
+  3= USDC
+
+ELLIPSIS FINANCE => 0x160CAed03795365F3A589f10C379FfA7d75d4E76 //0x2D0A931Dd088ea108a73901f83065DCA81ca474C
+(BUSD-USDC-USDT) => exchange(int128 i, int128 j, uint256 dx, uint256 min_dy)
+0=DAI
+1=BUSD
+2=USDC
+3=USDT
+
+
+
+
+MAY 18
