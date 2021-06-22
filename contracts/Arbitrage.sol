@@ -106,6 +106,8 @@ contract Arbitrage {
                 pancakeFee
             )[0];
 
+        // TODO: Convert quote of endAmountRequired amount in equivalent amount of dstTradeTokenAddress to be the minReturn amount on UnoSwap
+
         SwapHelper.SwapStruct memory swapStruct;
 
         for (uint256 i = 0; i < setTokenPath.length - 1; i++) {
