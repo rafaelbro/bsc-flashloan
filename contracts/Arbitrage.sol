@@ -38,45 +38,30 @@ contract Arbitrage {
         }
     }
 
-    function setPath(uint256[] memory routingPath, address[] memory tokenPath)
+    function setPath(address[] memory tokenPath)
         internal
     {
-        delete setRouterPath;
         delete setTokenPath;
-        require(
-            routingPath.length == tokenPath.length - 1,
-            "Token path needs to be ( routing path + 1) "
-        );
-
-        for (uint256 i; i < routingPath.length; i++) {
-            setRouterPath.push(routingPath[i]);
-            setTokenPath.push(tokenPath[i]);
+        for (uint256 i; i < tokenPath.length - 1; i++) {
+            setTokenPath.push(abi.encodePacked("00000000000000003b6d0340", tokenPath[i]));
         }
-
-        setTokenPath.push(tokenPath[routingPath.length]);
     }
 
     function startArbitrage(
-        address inPairAddress,
+        address srcTokenAddr,
         uint256 amountBorrowed, //amount of tokens of token[0]
-        uint256[] calldata routerPath,
-        address[] calldata tokenPath
+        uint256 minReturnValue, //Double check if it is the final token, origin token or dollar
+        address[] calldata tokenPairPath
     ) external onlyOwner {
         pairAddress = inPairAddress;
 
-        (uint256 amountToken0, uint256 amountToken1) =
-            defineTokenOrderBasedOnPair(
-                tokenPath[0],
-                tokenPath[tokenPath.length - 1],
-                amountBorrowed
-            );
-
-        setPath(routerPath, tokenPath);
+        uint256 amountToken0 = 0; //Consider use of BUSD
+        setPath(tokenPairPath);
 
         //Flashloan borrows asset with non 0 amount
         IUniswapV2Pair(pairAddress).swap(
             amountToken0,
-            amountToken1,
+            amountBorrowed,
             address(this),
             bytes("not empty")
         );
