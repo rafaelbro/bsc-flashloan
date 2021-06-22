@@ -16,6 +16,7 @@ contract Arbitrage {
     address owner;
     address myAddress = address(this); // contract address
     address private pairAddress;
+    address private dstTradeTokenAddress;
     mapping(uint256 => address) private routerMap; //mapping ints to routers
 
     uint256[] private setRouterPath; //var to declare router path
@@ -48,20 +49,27 @@ contract Arbitrage {
     }
 
     function startArbitrage(
-        address srcTokenAddr,
+        address inPairAddress,
         uint256 amountBorrowed, // amount of tokens of token[0]
-        // uint256 minReturnValue, // Double check if it is indeed the final token
+        address _dstTradeTokenAddress, // destination token to be trade in 1inch
         address[] calldata tokenPairPath
     ) external onlyOwner {
         pairAddress = inPairAddress;
+        dstTradeTokenAddress = _dstTradeTokenAddress;
 
-        uint256 amountToken0 = 0; //Consider use of BNB or BUSD
+        (uint256 amountToken0, uint256 amountToken1) =
+            defineTokenOrderBasedOnPair(
+                tokenPath[0],
+                tokenPath[tokenPath.length - 1],
+                amountBorrowed
+        );
+
         setPath(tokenPairPath);
 
         //Flashloan borrows asset with non 0 amount
         IUniswapV2Pair(pairAddress).swap(
             amountToken0,
-            amountBorrowed,
+            amountToken1,
             address(this),
             bytes("not empty")
         );
