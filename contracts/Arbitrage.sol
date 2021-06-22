@@ -49,13 +49,13 @@ contract Arbitrage {
 
     function startArbitrage(
         address srcTokenAddr,
-        uint256 amountBorrowed, //amount of tokens of token[0]
-        uint256 minReturnValue, //Double check if it is the final token, origin token or dollar
+        uint256 amountBorrowed, // amount of tokens of token[0]
+        // uint256 minReturnValue, // Double check if it is indeed the final token
         address[] calldata tokenPairPath
     ) external onlyOwner {
         pairAddress = inPairAddress;
 
-        uint256 amountToken0 = 0; //Consider use of BUSD
+        uint256 amountToken0 = 0; //Consider use of BNB or BUSD
         setPath(tokenPairPath);
 
         //Flashloan borrows asset with non 0 amount
