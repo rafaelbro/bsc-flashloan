@@ -43,10 +43,7 @@ const providerMainNet = new HDWalletProvider({
   providerOrUrl: 'https://bsc-dataseed1.binance.org'
 })
 const providerForFork = new HDWalletProvider("myth like bonus scare over problem client lizard pioneer submit female collect", "http://127.0.0.1:8545");
-const provider = new HDWalletProvider({
-  privateKeys: ['961706d001210e16f60bcccb14c390f93deb97d3f89e37b58f50b3a7c16aa64a'],
-  providerOrUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545'
-});
+
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
